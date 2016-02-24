@@ -26,26 +26,40 @@ type Item struct {
 	Val string
 }
 
-type testSlice []*Item
+type testKVSlice []*Item
 
-func (t testSlice) Len() int {
+func (t testKVSlice) Len() int {
 	return len(t)
 }
 
-func (t testSlice) Less(i, j int) bool {
+func (t testKVSlice) Less(i, j int) bool {
 	return t[i].Key < t[j].Key
 }
 
-func (t testSlice) Swap(i, j int) {
+func (t testKVSlice) Swap(i, j int) {
+	t[i], t[j] = t[j], t[i]
+}
+
+type testIntSlice []int
+
+func (t testIntSlice) Len() int {
+	return len(t)
+}
+
+func (t testIntSlice) Less(i, j int) bool {
+	return t[i] < t[j]
+}
+
+func (t testIntSlice) Swap(i, j int) {
 	t[i], t[j] = t[j], t[i]
 }
 
 /********************
  * A typical key/value storage, once as map[string]string, once
- * as testSlice{string,string}.
+ * as testKVSlice{string,string}.
  */
 
-func populateKV(theArr testSlice, theMap map[string]string) string {
+func populateKV(theArr testKVSlice, theMap map[string]string) string {
 	var query string
 	var k, v string
 
@@ -70,7 +84,7 @@ func populateKV(theArr testSlice, theMap map[string]string) string {
 func BenchmarkKVItemSlice(b *testing.B) {
 	var found bool
 	theMap := make(map[string]string)
-	theArr := make(testSlice, numItems)
+	theArr := make(testKVSlice, numItems)
 	q := populateKV(theArr, theMap)
 
 	b.ResetTimer()
@@ -91,12 +105,12 @@ func BenchmarkKVItemSlice(b *testing.B) {
 func BenchmarkKVItemSliceSort(b *testing.B) {
 	var found bool
 	theMap := make(map[string]string)
-	theArr := make(testSlice, numItems)
+	theArr := make(testKVSlice, numItems)
 	q := populateKV(theArr, theMap)
 
 	b.ResetTimer()
 	sort.Sort(theArr)
-	for trials := 0; trials < b.N; trials++ {
+	for i := 0; i < b.N; i++ {
 		j := sort.Search(theArr.Len(), func(index int) bool {
 			return theArr[index].Key >= q
 		})
@@ -112,7 +126,7 @@ func BenchmarkKVItemSliceSort(b *testing.B) {
 func BenchmarkKVStringMap(b *testing.B) {
 	var found bool
 	theMap := make(map[string]string)
-	theArr := make(testSlice, numItems)
+	theArr := make(testKVSlice, numItems)
 	q := populateKV(theArr, theMap)
 
 	b.ResetTimer()
@@ -127,10 +141,10 @@ func BenchmarkKVStringMap(b *testing.B) {
 }
 
 /********************
- * A set of integers, once as []int, once as map[int]struct{}
+ * A set of integers, once as testIntSlice, once as map[int]struct{}
  */
 
-func populateInts(theArr []int, theMap map[int]struct{}) int {
+func populateInts(theArr testIntSlice, theMap map[int]struct{}) int {
 	var query int
 	rand.Seed(time.Now().UnixNano())
 
@@ -152,7 +166,7 @@ func populateInts(theArr []int, theMap map[int]struct{}) int {
 func BenchmarkSetIntSlice(b *testing.B) {
 	var found bool
 	theMap := make(map[int]struct{})
-	theArr := make([]int, numItems)
+	theArr := make(testIntSlice, numItems)
 	q := populateInts(theArr, theMap)
 
 	b.ResetTimer()
@@ -170,10 +184,31 @@ func BenchmarkSetIntSlice(b *testing.B) {
 	}
 }
 
+func BenchmarkSetIntSliceSort(b *testing.B) {
+	var found bool
+	theMap := make(map[int]struct{})
+	theArr := make(testIntSlice, numItems)
+	q := populateInts(theArr, theMap)
+
+	b.ResetTimer()
+	sort.Sort(theArr)
+	for i := 0; i < b.N; i++ {
+		j := sort.Search(theArr.Len(), func(index int) bool {
+			return theArr[index] >= q
+		})
+		if j != theArr.Len() && theArr[j] == q {
+			found = true
+		}
+	}
+	if !found {
+		b.Fail()
+	}
+}
+
 func BenchmarkSetIntMap(b *testing.B) {
 	var found bool
 	theMap := make(map[int]struct{})
-	theArr := make([]int, numItems)
+	theArr := make(testIntSlice, numItems)
 	q := populateInts(theArr, theMap)
 
 	b.ResetTimer()
