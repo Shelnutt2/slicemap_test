@@ -123,6 +123,27 @@ func BenchmarkKVItemSliceSort(b *testing.B) {
 	}
 }
 
+func BenchmarkKVItemSliceSortMinusSortTime(b *testing.B) {
+	var found bool
+	theMap := make(map[string]string)
+	theArr := make(testKVSlice, numItems)
+	q := populateKV(theArr, theMap)
+
+	sort.Sort(theArr)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		j := sort.Search(theArr.Len(), func(index int) bool {
+			return theArr[index].Key >= q
+		})
+		if j != theArr.Len() && theArr[j].Key == q {
+			found = true
+		}
+	}
+	if !found {
+		b.Fail()
+	}
+}
+
 func BenchmarkKVStringMap(b *testing.B) {
 	var found bool
 	theMap := make(map[string]string)
@@ -192,6 +213,27 @@ func BenchmarkSetIntSliceSort(b *testing.B) {
 
 	b.ResetTimer()
 	sort.Sort(theArr)
+	for i := 0; i < b.N; i++ {
+		j := sort.Search(theArr.Len(), func(index int) bool {
+			return theArr[index] >= q
+		})
+		if j != theArr.Len() && theArr[j] == q {
+			found = true
+		}
+	}
+	if !found {
+		b.Fail()
+	}
+}
+
+func BenchmarkSetIntSliceSortMinusSortTime(b *testing.B) {
+	var found bool
+	theMap := make(map[int]struct{})
+	theArr := make(testIntSlice, numItems)
+	q := populateInts(theArr, theMap)
+
+	sort.Sort(theArr)
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		j := sort.Search(theArr.Len(), func(index int) bool {
 			return theArr[index] >= q
