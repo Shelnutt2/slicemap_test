@@ -109,8 +109,8 @@ func BenchmarkKVItemSliceSort(b *testing.B) {
 	q := populateKV(theArr, theMap)
 
 	b.ResetTimer()
-	sort.Sort(theArr)
 	for i := 0; i < b.N; i++ {
+		sort.Sort(theArr)
 		j := sort.Search(theArr.Len(), func(index int) bool {
 			return theArr[index].Key >= q
 		})
@@ -212,8 +212,8 @@ func BenchmarkSetIntSliceSort(b *testing.B) {
 	q := populateInts(theArr, theMap)
 
 	b.ResetTimer()
-	sort.Sort(theArr)
 	for i := 0; i < b.N; i++ {
+		sort.Sort(theArr)
 		j := sort.Search(theArr.Len(), func(index int) bool {
 			return theArr[index] >= q
 		})
